@@ -10,6 +10,7 @@ from tweepy import Stream
 import json
 import codecs
 import en
+import time
 
 
 class SentiWordNetDemoCode:
@@ -86,6 +87,7 @@ class TweetData:
         
     
     def getWork(self):
+        global FILEPOINTER
         positive = 0
         negative = 0
         a = SentiWordNetDemoCode();
@@ -111,10 +113,15 @@ class TweetData:
                     #print(word,category,a.extract(word, category))
                 except:
                     pass
+        ct = time.localtime()
+        thistime = time.strftime("%Y-%m-%d %HHR",ct)
+        FILE_NAME = thistime+" _"+FILEPOINTER+".txt"
+        new_f = open(FILE_NAME,"w+")
         
-        print "This is positive ",positive
-        print "This is negative ",negative
-        print "The Total is ",positive-negative
+        new_f.write("This is positive "+str(positive)+"\n")
+        new_f.write("This is negative "+str(negative)+"\n")
+        new_f.write("The Total is "+str(positive-negative))
+        new_f.close()
     
     def getcategory(self,word):
         #Higher prirority for verb
@@ -150,6 +157,7 @@ crude_oil = set()
 sp = set()
 usd = set()
 eur = set()
+FILEPOINTER = ""
 
 #Main class
 class MyListener(StreamListener):
@@ -162,7 +170,7 @@ class MyListener(StreamListener):
         self.file4 = codecs.open("sp.txt", 'w+', encoding='utf8')
     
     def on_data(self, Tweet):
-        global crude_oil,sp,usd,eur
+        global crude_oil,sp,usd,eur,FILEPOINTER
         Tweet = json.loads(Tweet)
         newTweet = Tweet["text"].lower()
         if "crude" in newTweet:
@@ -183,8 +191,11 @@ class MyListener(StreamListener):
         
         #print(len(crude_oil),len(usd),len(eur),len(sp))
         if(len(crude_oil) > 2 and len(usd) > 2 and len(sp) > 2):
+            name_list = ["CRUDEOIL","SP 500","USD","EUR"]
+            i_n = 0
             for tweets_data in [crude_oil,sp,usd,eur]:
-                
+                FILEPOINTER = name_list[i_n]
+                i_n += 1
                 t = TweetData(tweets_data)
                 t.getWork()
             quit()
